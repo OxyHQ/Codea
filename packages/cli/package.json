@@ -1,0 +1,51 @@
+{
+  "name": "@alia-codea/cli",
+  "version": "2.0.2",
+  "description": "Codea CLI - AI coding assistant for your terminal by Alia",
+  "main": "dist/index.js",
+  "bin": {
+    "codea": "./dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --clean",
+    "dev": "bun src/index.ts",
+    "start": "node dist/index.js",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "cli",
+    "coding",
+    "assistant",
+    "terminal",
+    "alia",
+    "codea"
+  ],
+  "author": "Alia",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "conf": "^13.0.1",
+    "ink": "^6.7.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "marked": "^15.0.4",
+    "marked-terminal": "^7.2.1",
+    "openai": "^6.16.0",
+    "ora": "^8.1.1",
+    "react": "19.2.0",
+    "simple-git": "^3.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.2.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
