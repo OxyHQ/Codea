@@ -8,7 +8,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OxyHQ/codea-ai-extension"
+    "url": "https://github.com/OxyHQ/Codea",
+    "directory": "packages/vscode"
   },
   "icon": "resources/codea-logo.png",
   "engines": {
@@ -247,7 +248,7 @@
     "@oxy.so/core": "7.48.0",
     "openai": "^6.46.0",
     "pathe": "2.0.3",
-    "@alia.onl/server": "workspace:*"
+    "@alia.onl/server": "1.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",

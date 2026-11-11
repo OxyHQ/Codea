@@ -1,0 +1,144 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!.worktrees",
+      "!**/dist",
+      "!**/coverage",
+      "!**/*.generated.*"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "includes": ["**"],
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "arrowParentheses": "always",
+      "bracketSpacing": true
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "a11y": {
+        "noRedundantRoles": "warn",
+        "noStaticElementInteractions": "warn",
+        "noSvgWithoutTitle": "warn",
+        "useButtonType": "warn",
+        "useFocusableInteractive": "warn",
+        "useKeyWithClickEvents": "warn",
+        "useSemanticElements": "warn"
+      },
+      "complexity": {
+        "noCommaOperator": "warn",
+        "noExtraBooleanCast": "warn",
+        "noImportantStyles": "warn",
+        "noStaticOnlyClass": "warn",
+        "noUselessContinue": "warn",
+        "noUselessEmptyExport": "warn",
+        "noUselessFragments": "warn",
+        "noUselessStringRaw": "warn",
+        "noUselessThisAlias": "warn",
+        "useArrowFunction": "warn",
+        "useIndexOf": "warn",
+        "useLiteralKeys": "warn",
+        "useOptionalChain": "warn",
+        "useRegexLiterals": "warn"
+      },
+      "correctness": {
+        "noChildrenProp": "warn",
+        "noSwitchDeclarations": "warn",
+        "noUnsafeOptionalChaining": "warn",
+        "noUnusedFunctionParameters": "warn",
+        "noUnusedImports": "warn",
+        "noUnusedPrivateClassMembers": "warn",
+        "noUnusedVariables": "warn",
+        "noVoidTypeReturn": "warn",
+        "useExhaustiveDependencies": "warn",
+        "useJsxKeyInIterable": "warn",
+        "useParseIntRadix": "warn"
+      },
+      "nursery": {
+        "noFloatingPromises": "warn"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "warn"
+      },
+      "style": {
+        "noNonNullAssertion": "warn",
+        "useConst": "warn",
+        "useExponentiationOperator": "warn",
+        "useImportType": "warn",
+        "useNodejsImportProtocol": "warn",
+        "useTemplate": "warn"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn",
+        "noAssignInExpressions": "warn",
+        "noConfusingLabels": "warn",
+        "noConfusingVoidType": "warn",
+        "noDoubleEquals": "warn",
+        "noExplicitAny": "warn",
+        "noGlobalIsNan": "warn",
+        "noImplicitAnyLet": "warn",
+        "noTemplateCurlyInString": "warn",
+        "noThenProperty": "warn",
+        "useIterableCallbackReturn": "warn"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["packages/cli/src/**", "packages/vscode/webview-ui/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": {
+              "level": "error",
+              "options": {
+                "ignoreRestSiblings": true
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -32,8 +32,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OxyHQ/Alia.git",
-    "directory": "packages/alia-codea-cli"
+    "url": "git+https://github.com/OxyHQ/Codea.git",
+    "directory": "packages/cli"
   },
   "dependencies": {
     "@oxy.so/core": "7.48.0",
@@ -47,7 +47,7 @@
     "marked-terminal": "^7.3.0",
     "qrcode": "^1.5.4",
     "react": "19.2.0",
-    "@alia.onl/server": "workspace:*"
+    "@alia.onl/server": "1.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",

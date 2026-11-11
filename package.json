@@ -1,0 +1,27 @@
+{
+  "name": "codea-monorepo",
+  "version": "1.0.0",
+  "description": "Codea — the coding assistant by Alia: a VS Code extension and a terminal CLI",
+  "private": true,
+  "workspaces": [
+    "packages/vscode",
+    "packages/vscode/webview-ui",
+    "packages/cli"
+  ],
+  "packageManager": "bun@1.4.3",
+  "scripts": {
+    "dev:vscode": "bun run --filter alia-codea watch",
+    "dev:cli": "bun run --filter @alia-codea/cli dev",
+    "build": "bun run --filter alia-codea build && bun run --filter @alia-codea/cli build",
+    "typecheck": "bun run --filter alia-codea typecheck && bun run --filter @alia-codea/cli typecheck && bunx tsc -b packages/vscode/webview-ui",
+    "test": "bun run --filter alia-codea test && bun run --filter @alia-codea/cli test",
+    "package:vscode": "bun run --filter alia-codea package",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "typescript": "^5.9.3"
+  }
+}

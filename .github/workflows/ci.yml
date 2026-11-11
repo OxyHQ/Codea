@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
+
+# A push to a PR branch supersedes the last one. A push to `main` does not: each
+# main commit keeps its own run, because the release waits for CI on that exact SHA.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, typecheck & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          # `packageManager` in package.json is the one pin.
+          bun-version-file: package.json
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Biome
+        run: bunx biome ci .
+
+      # `webview-ui` is a solution-style project (references only), so `tsc --noEmit`
+      # in it compiles nothing; `tsc -b` is the real check.
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun run test
+
+  build:
+    name: Build & package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build the extension and the CLI
+        run: bun run build
+
+      # Builds the VSIX so a broken package fails here; it is not published.
+      - name: Package the VS Code extension
+        run: bun run package:vscode
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alia-codea-vsix
+          path: packages/vscode/*.vsix
+          if-no-files-found: error
+          retention-days: 14
