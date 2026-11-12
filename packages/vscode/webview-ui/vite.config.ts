@@ -8,10 +8,9 @@ const emptyModule = path.resolve(__dirname, './src/empty-module.js');
 
 // The webview bundles `@oxy.so/bloom`'s React Native module graph (the
 // `BloomThemeProvider`) through the maintained `vite-plugin-react-native-web`
-// plugin — the same setup as OxyHQ/Alia's `alia-canvas`. It aliases
-// react-native→react-native-web, applies `.web.*` platform-extension priority
-// in dev AND build, treats RN packages' JSX-in-.js via rolldown moduleTypes,
-// strips Flow types, and defines the RN globals. Runs on rolldown-vite
+// plugin. It aliases react-native→react-native-web, applies `.web.*`
+// platform-extension priority in dev AND build, treats RN packages' JSX-in-.js
+// via rolldown moduleTypes, strips Flow types, and defines the RN globals. Runs on rolldown-vite
 // (`"vite": "npm:rolldown-vite@^7"`) to match the hoisted root toolchain.
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
