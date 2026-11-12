@@ -19,9 +19,10 @@
  *
  * ## Why this is a copy rather than a shared module
  *
- * `packages/app`, `@alia.onl/sdk` and the VS Code extension parse the same
- * surface. `@alia-codea/cli` is a PUBLISHED package, so it cannot depend on an
- * unpublished workspace package. Parsing does not invent: an entry missing its
+ * OxyHQ/Alia's `packages/app`, `@alia.onl/sdk` and the VS Code extension parse
+ * the same surface. They live in different repositories and this CLI is
+ * published, so a shared module would have to be one more published package; a
+ * small copy is cheaper. Parsing does not invent: an entry missing its
  * id or name is dropped, and a response whose entries all fail to parse throws
  * rather than reading as an empty catalogue.
  */

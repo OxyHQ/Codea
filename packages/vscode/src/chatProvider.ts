@@ -42,7 +42,7 @@ import {
  *
  * The server never sends a raw failure mid-answer: when every provider is busy
  * or one dies part-way it streams a friendly sentence flagged
- * `alia_meta.synthetic` (`packages/api/src/routes/v1/chat-completions.ts`).
+ * `alia_meta.synthetic` (OxyHQ/Alia `packages/api/src/routes/v1/chat-completions.ts`).
  * `./aliaChat` surfaces that as its own event, so it is retried once and then
  * reported as a retryable error — never rendered as the answer and never
  * remembered as one. The list of English and Spanish phrases this file used to

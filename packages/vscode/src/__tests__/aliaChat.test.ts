@@ -16,8 +16,8 @@ import {
 /**
  * The stream client reads what the server actually writes.
  *
- * The frames below are the exact byte shapes of `packages/api/src/lib/chat/
- * stream-runner.ts`, `provider-loop.ts`, `sse-writer.ts` and
+ * The frames below are the exact byte shapes of OxyHQ/Alia's
+ * `packages/api/src/lib/chat/stream-runner.ts`, `provider-loop.ts`, `sse-writer.ts` and
  * `streaming-helpers.ts`: the early `: keep-alive` comment, OpenAI-shaped
  * `data:` chunks, `event:`-named product events, the `alia_meta.synthetic`
  * stand-in, the in-stream error envelope and `[DONE]`. A fixture invented from
