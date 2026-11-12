@@ -1,6 +1,6 @@
 /**
  * The daemon's side of the external-agent protocol (ADR 0030). Mirrors
- * `packages/api/src/domain/external-agent.ts`; the two are kept boring on purpose.
+ * OxyHQ/Alia's `packages/api/src/domain/external-agent.ts`; the two are kept boring on purpose.
  */
 
 export const EXTERNAL_CLIS = ['claude', 'codex', 'opencode'] as const;
