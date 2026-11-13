@@ -15,6 +15,10 @@ export interface PairedAgent {
    * the person's Oxy session and must be reconnected from Gemies once.
    */
   readonly credential?: string;
+  /** The folder its CLI works in, chosen when it was paired (`--cwd`, or where `connect` ran). */
+  readonly cwd?: string;
+  /** Whether its CLI may edit files there (`--read-only` turns it off). */
+  readonly write?: boolean;
 }
 
 interface Schema {
@@ -77,6 +81,11 @@ export function forgetAgent(agentId: string, credential: string): void {
     'agents',
     store.get('agents').filter((a) => a.agentId !== agentId || a.credential !== credential),
   );
+}
+
+/** Forgets every agent this machine serves (`codea disconnect --forget`). */
+export function forgetAllAgents(): void {
+  store.set('agents', []);
 }
 
 /** Persisted, so a conversation survives a restart of the daemon. Bounded: the oldest are dropped. */

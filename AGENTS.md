@@ -6,7 +6,9 @@ El asistente de programación de Alia: extensión de VS Code (`packages/vscode`,
 `packages/vscode/webview-ui`. Habla con Alia por la API de Gemies (`/v1/chat/completions`) mediante
 `@gemies/server` publicado en npm, con inicio de sesión de Oxy. `codea connect` (agentes externos)
 no inicia sesión en nada: lo autoriza el código de emparejamiento y luego la credencial propia del
-agente ([Gemies ADR 0038](https://github.com/OxyHQ/Gemies/blob/main/docs/adr/0038-external-agents-connect-with-their-own-credential.md)).
+agente ([Gemies ADR 0038](https://github.com/OxyHQ/Gemies/blob/main/docs/adr/0038-external-agents-connect-with-their-own-credential.md)). Después instala el
+daemon como servicio de usuario (systemd `--user`, LaunchAgent, tarea programada de Windows) para que el
+agente siga conectado sin nadie: `external/service.ts`.
 
 ## Comandos
 

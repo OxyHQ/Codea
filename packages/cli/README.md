@@ -57,21 +57,34 @@ codea r "add unit tests for the User class" -y  # Auto-approve changes
 ### Connect an external agent
 
 ```bash
-codea connect AB12-CD34-EF56-GH78 --cli codex   # pair this computer, then serve it
-codea connect                                   # serve the agents this computer is paired with
+codea connect AB12-CD34-EF56-GH78 --cli codex   # pair this computer and keep it connected
+codea status                                    # the service, the agents, the last log lines
+codea disconnect                                # stop and remove the service (--forget: and the agents)
+codea connect                                   # reinstall the service for the agents paired here
 ```
 
 Serves Claude Code, Codex or OpenCode to Gemies as one of your gemies. In Gemies, Settings → Connect
 external Gemie gives you one text to paste into your agent; it runs the first command. There is no
 sign-in: the single-use code is the authorisation, and redeeming it leaves this computer the agent's
-own credential (in the CLI's config directory, readable by you only), so `codea connect` reconnects
-after a restart without asking anything. Removing the agent in Gemies revokes it; **Reconnect** there
-replaces it.
+own credential (in the CLI's config directory, readable by you only).
 
-The process dials Gemies outbound and runs the CLI you are already signed in to, so the answers use
+`connect` then installs a per-user background service and returns once the agent is connected:
+
+| Platform | Service |
+|---|---|
+| Linux | systemd `--user` unit `codea.service`, with lingering turned on when Linux allows it |
+| macOS | LaunchAgent `so.oxy.codea` |
+| Windows | Scheduled Task `Codea` |
+
+It starts at login, restarts if it fails, and keeps the agent connected after you close the terminal
+and after a restart. Where no service manager exists (WSL without systemd), it runs as a background
+process and says so. Removing the agent in Gemies revokes it; **Reconnect** there replaces it.
+
+The daemon dials Gemies outbound and runs the CLI you are already signed in to, so the answers use
 your own subscription. Each turn also gets the gemie's tools — what you granted it in its editor in
-Gemies — as the MCP server `gemies`, for that run only: your CLI's own config is not changed. It runs in the current directory (`--cwd` to change it) and may edit files
-there; pass `--read-only` to forbid it.
+Gemies — as the MCP server `gemies`, for that run only: your CLI's own config is not changed. The
+agent works in the folder `connect` ran in (`--cwd` to change it) and may edit files there; pass
+`--read-only` to forbid it.
 
 ### Session Management
 ```bash
