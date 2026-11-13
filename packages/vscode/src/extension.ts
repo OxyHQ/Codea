@@ -3,11 +3,8 @@ import { CodeaChatViewProvider } from './chatProvider';
 import { AliaInlineCompletionProvider } from './inlineCompletionProvider';
 import { AliaChatParticipant } from './chatParticipant';
 import { AliaAuthenticationProvider } from './authProvider';
-import { McpLocalClient } from './mcp-client';
 import { errorMessage } from './errors';
 import { log, disposeLogger } from './logger';
-
-let mcpClient: McpLocalClient | null = null;
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push({ dispose: disposeLogger });
@@ -44,28 +41,6 @@ export function activate(context: vscode.ExtensionContext) {
       webviewOptions: { retainContextWhenHidden: true },
     }),
   );
-
-  // Start local MCP client (non-blocking)
-  mcpClient = new McpLocalClient(authProvider);
-  context.subscriptions.push(mcpClient);
-  mcpClient.start().catch((err) => log.error('[MCP] Startup error:', err));
-  let mcpLifecycleActive = true;
-  const stopMcpContext = authProvider.onSessionContextChange(() => {
-    mcpClient?.dispose();
-    mcpClient = null;
-    queueMicrotask(() => {
-      if (!mcpLifecycleActive || mcpClient) return;
-      mcpClient = new McpLocalClient(authProvider);
-      context.subscriptions.push(mcpClient);
-      void mcpClient.start().catch((err) => log.error('[MCP] Session startup error:', err));
-    });
-  });
-  context.subscriptions.push({
-    dispose: () => {
-      mcpLifecycleActive = false;
-      stopMcpContext();
-    },
-  });
 
   // Commands
   context.subscriptions.push(
@@ -151,7 +126,4 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
-export function deactivate() {
-  mcpClient?.dispose();
-  mcpClient = null;
-}
+export function deactivate() {}
