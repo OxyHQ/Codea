@@ -134,7 +134,7 @@ Config is stored in `~/.config/alia-codea-cli/config.json`. `defaultModel` is a
 ```json
 {
   "apiKey": "your-api-key",
-  "apiBaseUrl": "https://api.alia.onl",
+  "apiBaseUrl": "https://api.gemies.ai",
   "defaultModel": ""
 }
 ```

@@ -38,15 +38,29 @@ interface ConfigSchema {
   currentSessionId: string | null;
 }
 
+/** The Gemies API (Gemies ADR 0034), the backend Codea talks to. */
+export const DEFAULT_API_BASE_URL = 'https://api.gemies.ai';
+
+/**
+ * The same backend's previous host. `Conf` writes its defaults to disk, so every
+ * existing install stored this as `apiBaseUrl`; a stored value equal to it is
+ * that old default, not a choice, and is rewritten once to the current host.
+ */
+export const RETIRED_API_BASE_URL = 'https://api.alia.onl';
+
 export const config = new Conf<ConfigSchema>({
   projectName: 'alia-codea-cli',
   defaults: {
-    apiBaseUrl: 'https://api.alia.onl',
+    apiBaseUrl: DEFAULT_API_BASE_URL,
     defaultModel: '',
     sessions: [],
     currentSessionId: null,
   },
 });
+
+if (config.get('apiBaseUrl') === RETIRED_API_BASE_URL) {
+  config.set('apiBaseUrl', DEFAULT_API_BASE_URL);
+}
 
 /**
  * The configured model, or `''` for the server default.

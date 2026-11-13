@@ -10,7 +10,7 @@
  */
 import { hostname } from 'node:os';
 import chalk from 'chalk';
-import { config } from '../utils/config.js';
+import { config, DEFAULT_API_BASE_URL } from '../utils/config.js';
 import { linkedAliaClient } from '../utils/oxy-session.js';
 import { startDaemon, type Daemon } from '../external/daemon.js';
 import { runProcess } from '../external/process.js';
@@ -103,7 +103,7 @@ async function redeem(
 }
 
 export async function connect(options: ConnectOptions): Promise<void> {
-  const apiBaseUrl = config.get('apiBaseUrl') || 'https://api.alia.onl';
+  const apiBaseUrl = config.get('apiBaseUrl') || DEFAULT_API_BASE_URL;
   let agents = pairedAgents(apiBaseUrl);
 
   if (options.code !== undefined) {
