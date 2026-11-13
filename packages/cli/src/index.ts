@@ -6,7 +6,7 @@ import { configuredModel } from './utils/config.js';
 import { startRepl } from './commands/repl.js';
 import { runPrompt } from './commands/run.js';
 import { login, logout } from './commands/auth.js';
-import { connect } from './commands/connect.js';
+import { connect, disconnect, serve, status } from './commands/connect.js';
 import { listSessions, resumeSession } from './commands/sessions.js';
 import chalk from 'chalk';
 import { restoreSession } from './utils/oxy-session.js';
@@ -118,22 +118,44 @@ program
   });
 
 // Serve a coding-agent CLI to Gemies as one of the person's gemies (Gemies ADR 0030, ADR 0038).
-// No sign-in: the pairing code is the authorisation.
+// No sign-in: the pairing code is the authorisation. The daemon runs as a per-user service.
 program
   .command('connect [code]')
   .description(
-    'Connect Claude Code, Codex or OpenCode to Gemies as one of your gemies. With a code from Gemies (Settings → Connect external Gemie) it pairs this machine; without one it serves the agents already paired here.',
+    'Connect Claude Code, Codex or OpenCode to Gemies as one of your gemies, and keep it connected as a background service that starts at login. With a code from Gemies (Settings → Connect external Gemie) it pairs this machine; without one it reinstalls the service for the agents already paired here.',
   )
   .option('--cli <cli>', 'Which CLI this machine serves: claude, codex or opencode')
-  .option('--agent <id>', 'Serve only this paired agent')
+  .option('--agent <id>', 'With --cwd or --read-only and no code: change only this paired agent')
   .option('--cwd <dir>', 'Working directory the agent runs in (default: the current one)')
   .option(
     '--read-only',
     'Do not let the agent change anything (default: it may edit files in the working directory)',
   )
-  .option('--write', 'Deprecated: editing is the default')
   .action(async (code: string | undefined, options) => {
-    await connect(code, options);
+    await connect(code, options, VERSION);
+  });
+
+program
+  .command('status')
+  .description('Show the background service, the agents it serves and its last log lines')
+  .action(async () => {
+    await status();
+  });
+
+program
+  .command('disconnect')
+  .description('Stop and remove the background service')
+  .option('--forget', 'Also forget the agents paired on this machine and their credentials')
+  .action(async (options) => {
+    await disconnect(options);
+  });
+
+// What the service runs; not meant to be typed.
+program
+  .command('serve', { hidden: true })
+  .description('Serve every agent paired on this machine (run by the background service)')
+  .action(async () => {
+    await serve();
   });
 
 // Session management

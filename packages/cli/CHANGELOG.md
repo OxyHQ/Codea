@@ -1,5 +1,29 @@
 # @alia-codea/cli
 
+## 4.2.0
+
+`codea connect` keeps the agent connected on its own. After pairing it installs the daemon as a
+per-user service and returns once the agent is connected:
+
+| Platform | Service |
+|---|---|
+| Linux | systemd `--user` unit `codea.service`, with lingering turned on when allowed |
+| macOS | LaunchAgent `so.oxy.codea` |
+| Windows | Scheduled Task `Codea`, at logon |
+
+It starts at login, restarts when it fails and survives the session that ran `connect` and a
+restart of the machine, so nobody has to reconnect the agent. Nothing is asked: the output says
+what was installed and how to remove it.
+
+- `codea status` shows the service, the agents it serves and its last log lines.
+- `codea disconnect` stops and removes the service; with `--forget` it also forgets the agents
+  paired here.
+- A CLI run through npx is copied, at its exact version, to the daemon's own folder, so the
+  service never points at npm's cache.
+- The daemon no longer gives up when Gemies cannot be reached (a machine just booted, a network
+  down): only a refusal from Gemies counts toward giving up.
+- Each agent keeps the folder and the read-only choice it was paired with.
+
 ## 4.1.0
 
 The agent gets its gemie's tools

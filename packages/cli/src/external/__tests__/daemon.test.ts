@@ -219,6 +219,30 @@ describe('daemon', () => {
     await expect(d.done).resolves.toEqual({ reason: 'unknown-agent' });
   });
 
+  it('keeps retrying while Gemies cannot be reached, and never gives up on that', async () => {
+    const port = (wss.address() as { port: number }).port;
+    await new Promise<void>((resolve) => wss.close(() => resolve()));
+    let exited = false;
+    const d = start(echo, { maxAuthFailures: 2, minBackoffMs: 5, maxBackoffMs: 10 });
+    void d.done.then(() => {
+      exited = true;
+    });
+    await new Promise((r) => setTimeout(r, 200));
+    expect(exited).toBe(false);
+    // Gemies comes back on the same address: the daemon connects without being restarted.
+    wss = new WebSocketServer({ port, host: '127.0.0.1' });
+    wss.on('connection', (ws) => {
+      peers.push(ws);
+      ws.on('message', (data) => {
+        const frame = JSON.parse(data.toString()) as Record<string, unknown>;
+        received.push(frame);
+        if (frame.type === 'auth')
+          ws.send(JSON.stringify({ type: 'auth-ok', agentId: frame.agentId }));
+      });
+    });
+    await until(() => received.some((f) => f.type === 'auth'));
+  });
+
   it('gives up after repeated refused handshakes', async () => {
     wss.removeAllListeners('connection');
     wss.on('connection', (ws) => {

@@ -22,7 +22,7 @@ export interface DaemonOptions {
   readonly maxBackoffMs?: number;
   /** The CLI's own sessions per conversation. Omitted: every turn starts fresh. */
   readonly sessions?: SessionStore;
-  /** Consecutive failed handshakes before giving up. */
+  /** Consecutive refused handshakes before giving up (a network failure never counts). */
   readonly maxAuthFailures?: number;
 }
 
@@ -148,6 +148,8 @@ export function startDaemon(options: DaemonOptions): Daemon {
     const ws = new WebSocket(options.wsUrl);
     socket = ws;
     let authenticated = false;
+    /** Gemies answered and said no; a socket that never opened (no network yet) is not that. */
+    let refused = false;
 
     ws.onopen = () => {
       send(ws, { type: 'auth', agentId: options.agentId, credential: options.credential });
@@ -167,6 +169,7 @@ export function startDaemon(options: DaemonOptions): Daemon {
           log('connected');
           break;
         case 'auth-error':
+          refused = true;
           log(`Gemies refused the connection: ${frame.reason}`);
           // Neither heals by retrying: the agent is gone, or another credential replaced this one.
           if (frame.reason === 'unknown_agent') exit({ reason: 'unknown-agent' });
@@ -191,14 +194,16 @@ export function startDaemon(options: DaemonOptions): Daemon {
       for (const controller of turns.values()) controller.abort();
       if (stopped) return;
       log('disconnected');
-      scheduleReconnect(!authenticated);
+      // Only a refusal counts toward giving up. An unreachable Gemies (a machine just booted, a
+      // network down) is retried for as long as it takes: the daemon is meant to run unattended.
+      scheduleReconnect(refused && !authenticated);
     };
     ws.onerror = () => undefined;
   };
 
-  function scheduleReconnect(failedHandshake: boolean): void {
+  function scheduleReconnect(refusedHandshake: boolean): void {
     if (stopped) return;
-    if (failedHandshake) {
+    if (refusedHandshake) {
       authFailures += 1;
       if (authFailures >= maxAuthFailures) {
         log('giving up: Gemies keeps refusing this connection');
