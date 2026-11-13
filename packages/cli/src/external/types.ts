@@ -3,6 +3,8 @@
  * OxyHQ/Gemies' `packages/api/src/domain/external-agent.ts`; the two are kept boring on purpose.
  */
 
+import type { GemieTools } from './gemie-tools.js';
+
 export const EXTERNAL_CLIS = ['claude', 'codex', 'opencode'] as const;
 export type ExternalCli = (typeof EXTERNAL_CLIS)[number];
 
@@ -51,6 +53,8 @@ export interface RuntimeRun {
   readonly resumeId?: string;
   /** Called with the CLI's session id once it is known, so the next turn can resume it. */
   readonly onSession?: (sessionId: string) => void;
+  /** The gemie's tools in Gemies (ADR 0039), as the MCP server `gemies` of this run. */
+  readonly tools?: GemieTools;
 }
 
 /** One coding-agent CLI, driven non-interactively under the person's own login. */

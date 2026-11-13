@@ -69,7 +69,8 @@ after a restart without asking anything. Removing the agent in Gemies revokes it
 replaces it.
 
 The process dials Gemies outbound and runs the CLI you are already signed in to, so the answers use
-your own subscription. It runs in the current directory (`--cwd` to change it) and may edit files
+your own subscription. Each turn also gets the gemie's tools — what you granted it in its editor in
+Gemies — as the MCP server `gemies`, for that run only: your CLI's own config is not changed. It runs in the current directory (`--cwd` to change it) and may edit files
 there; pass `--read-only` to forbid it.
 
 ### Session Management

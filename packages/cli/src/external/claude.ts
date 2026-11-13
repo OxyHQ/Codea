@@ -1,3 +1,4 @@
+import { claudeToolArgs, toolsEnv } from './gemie-tools.js';
 import { lineSplitter, runProcess, tail } from './process.js';
 import type { ExternalRuntime } from './types.js';
 
@@ -8,7 +9,7 @@ import type { ExternalRuntime } from './types.js';
 export function claudeRuntime(command = 'claude'): ExternalRuntime {
   return {
     resumes: true,
-    async run({ prompt, cwd, write, signal, onDelta, resumeId, onSession }) {
+    async run({ prompt, cwd, write, signal, onDelta, resumeId, onSession, tools }) {
       let streamed = '';
       let result: { text: string; isError: boolean } | null = null;
       const onLine = (line: string): void => {
@@ -51,8 +52,11 @@ export function claudeRuntime(command = 'claude'): ExternalRuntime {
           '--permission-mode',
           write ? 'acceptEdits' : 'default',
           ...(resumeId ? ['--resume', resumeId] : []),
+          // Last: `--allowedTools` takes every argument after it, and the prompt is on stdin.
+          ...(tools ? claudeToolArgs(tools) : []),
         ],
         cwd,
+        ...(tools ? { env: toolsEnv(tools) } : {}),
         stdin: prompt,
         signal,
         onStdout: lines.push,

@@ -1,5 +1,16 @@
 # @alia-codea/cli
 
+## 4.1.0
+
+The agent gets its gemie's tools
+([Gemies ADR 0039](https://github.com/OxyHQ/Gemies/blob/main/docs/adr/0039-external-agents-reach-their-tools-over-mcp.md)).
+Gemies serves what the owner granted it in its editor (connected Notion, Linear…, the web, …) as a
+remote MCP server, and every turn `codea connect` runs hands it to the CLI as the server `gemies`:
+Claude Code through `--mcp-config` (its tools allowed, since `-p` cannot ask), Codex through
+`-c mcp_servers.gemies.*`, OpenCode through `OPENCODE_CONFIG_CONTENT`. The credential goes in the
+child's environment, never on a command line, and your CLI's config files are not touched. The tools
+run in Gemies; nothing new runs on your machine.
+
 ## 4.0.0
 
 `codea connect` signs in to nothing. The pairing code from Gemies is the authorisation

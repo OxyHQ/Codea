@@ -16,6 +16,7 @@ import { hostname } from 'node:os';
 import chalk from 'chalk';
 import { config, DEFAULT_API_BASE_URL } from '../utils/config.js';
 import { startDaemon, type Daemon } from '../external/daemon.js';
+import { gemieToolsUrl } from '../external/gemie-tools.js';
 import { runProcess } from '../external/process.js';
 import { NEW_CODE_HINT, redeemCode, type ConnectableAgent } from '../external/redeem.js';
 import { runtimeFor } from '../external/registry.js';
@@ -137,6 +138,7 @@ export async function connect(code: string | undefined, options: ConnectOptions)
       cwd,
       write,
       credential: agent.credential,
+      toolsUrl: gemieToolsUrl(apiBaseUrl, agent.agentId),
       log: (message) => {
         if (message === 'connected') {
           if (!announced) console.log(chalk.green(`Connected: ${agent.name}`));

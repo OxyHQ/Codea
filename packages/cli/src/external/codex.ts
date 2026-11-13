@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { codexToolArgs, toolsEnv } from './gemie-tools.js';
 import { lineSplitter, runProcess, tail } from './process.js';
 import type { ExternalRuntime } from './types.js';
 
@@ -15,7 +16,7 @@ import type { ExternalRuntime } from './types.js';
 export function codexRuntime(command = 'codex'): ExternalRuntime {
   return {
     resumes: true,
-    async run({ prompt, cwd, write, signal, onDelta, resumeId, onSession }) {
+    async run({ prompt, cwd, write, signal, onDelta, resumeId, onSession, tools }) {
       const dir = await mkdtemp(join(tmpdir(), 'alia-codex-'));
       const answerFile = join(dir, 'answer.txt');
       try {
@@ -30,6 +31,7 @@ export function codexRuntime(command = 'codex'): ExternalRuntime {
           `sandbox_mode="${write ? 'workspace-write' : 'read-only'}"`,
           '--output-last-message',
           answerFile,
+          ...(tools ? codexToolArgs(tools) : []),
         ];
         const args = resumeId ? [...common, 'resume', resumeId, '-'] : [...common, '-'];
 
@@ -48,6 +50,7 @@ export function codexRuntime(command = 'codex'): ExternalRuntime {
           command,
           args,
           cwd,
+          ...(tools ? { env: toolsEnv(tools) } : {}),
           stdin: prompt,
           signal,
           onStdout: lines.push,
