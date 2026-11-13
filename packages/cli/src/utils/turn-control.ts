@@ -1,4 +1,4 @@
-import type { AliaTurnControl } from '@alia.onl/server';
+import type { GemieTurnControl } from '@gemies/server';
 
 export interface ConversationControl {
   readonly lifetimeSignal: AbortSignal;
@@ -7,8 +7,8 @@ export interface ConversationControl {
   readonly stopAcknowledged: boolean;
   readonly stopRequested: boolean;
   bindAccount(subscribe: () => () => void): void;
-  attach(turn: AliaTurnControl, controller: AbortController): boolean;
-  finish(turn: AliaTurnControl): Promise<void>;
+  attach(turn: GemieTurnControl, controller: AbortController): boolean;
+  finish(turn: GemieTurnControl): Promise<void>;
   stop(): Promise<void>;
   dispose(): void;
 }
@@ -18,7 +18,7 @@ export function createConversationControl(): ConversationControl {
   const lifetime = new AbortController();
   const activity = new AbortController();
   let removeAccountListener: (() => void) | undefined;
-  let current: { turn: AliaTurnControl; controller: AbortController } | undefined;
+  let current: { turn: GemieTurnControl; controller: AbortController } | undefined;
   let stopping = false;
   let acknowledged = false;
   return {
@@ -36,12 +36,12 @@ export function createConversationControl(): ConversationControl {
     get stopRequested() {
       return stopping;
     },
-    attach(turn: AliaTurnControl, controller: AbortController): boolean {
+    attach(turn: GemieTurnControl, controller: AbortController): boolean {
       if (stopping || lifetime.signal.aborted) return false;
       current = { turn, controller };
       return true;
     },
-    async finish(turn: AliaTurnControl): Promise<void> {
+    async finish(turn: GemieTurnControl): Promise<void> {
       await turn.finish();
       if (current?.turn === turn) current = undefined;
     },

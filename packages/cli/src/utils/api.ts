@@ -1,4 +1,4 @@
-import { AliaServerClient, createAliaTurnControl } from '@alia.onl/server';
+import { GemieServerClient, createGemieTurnControl } from '@gemies/server';
 import type { ConversationControl } from './turn-control.js';
 import { config, DEFAULT_API_BASE_URL } from './config.js';
 import type { Message, ToolCall } from './conversation.js';
@@ -191,8 +191,8 @@ export async function streamChat(
     controller.abort();
     control?.dispose();
   });
-  const client = new AliaServerClient({ baseUrl, path: '/alia/chat', fetch: linked.fetch });
-  const turn = createAliaTurnControl(client, { controller, lifetimeSignal });
+  const client = new GemieServerClient({ baseUrl, path: '/alia/chat', fetch: linked.fetch });
+  const turn = createGemieTurnControl(client, { controller, lifetimeSignal });
 
   const allMessages: Message[] = [
     { role: 'system', content: systemMessage },

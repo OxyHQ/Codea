@@ -19,7 +19,7 @@
  *
  * ## Why this is a copy rather than a shared module
  *
- * OxyHQ/Alia's `packages/app`, `@alia.onl/sdk` and the VS Code extension parse
+ * OxyHQ/Alia's `packages/app`, `@gemies/sdk` and the VS Code extension parse
  * the same surface. They live in different repositories and this CLI is
  * published, so a shared module would have to be one more published package; a
  * small copy is cheaper. Parsing does not invent: an entry missing its

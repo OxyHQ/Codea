@@ -4,13 +4,13 @@
  * server SDK owns framing, decoding, typed events, cancellation and byte limits.
  * OpenAI types preserve the product's multimodal and tool-message request bodies.
  */
-import { AliaStreamError, readAliaEventStream, type AliaToolCallDelta } from '@alia.onl/server';
+import { GemieStreamError, readGemieEventStream, type GemieToolCallDelta } from '@gemies/server';
 import type OpenAI from 'openai';
 
 // ── Events ──────────────────────────────────────────────────────────────────
 
 /** Tool fragments are the shared server contract; assembly stays local. */
-export type ToolCallDelta = AliaToolCallDelta;
+export type ToolCallDelta = GemieToolCallDelta;
 
 /** A tool call assembled from its deltas; the shape the history stores. */
 export interface StreamedToolCall {
@@ -231,7 +231,7 @@ export async function* streamAliaChat(
   }
 
   try {
-    for await (const event of readAliaEventStream(response.body, { signal: options.signal })) {
+    for await (const event of readGemieEventStream(response.body, { signal: options.signal })) {
       switch (event.type) {
         case 'text':
           if (event.meta?.synthetic === true) {
@@ -280,7 +280,7 @@ export async function* streamAliaChat(
       }
     }
   } catch (error) {
-    if (error instanceof AliaStreamError) {
+    if (error instanceof GemieStreamError) {
       throw new AliaChatError(
         error.failure === 'truncated'
           ? 'Alia’s response ended before it was complete.'

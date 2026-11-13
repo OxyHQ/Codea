@@ -18,7 +18,7 @@
  *
  * ## Why this is a copy rather than a shared module
  *
- * OxyHQ/Alia's `packages/app`, `@alia.onl/sdk` and `@alia-codea/cli` parse the
+ * OxyHQ/Alia's `packages/app`, `@gemies/sdk` and `@alia-codea/cli` parse the
  * same surface. They live in different repositories and the CLI is published, so
  * a shared module would have to be one more published package; a small copy is
  * cheaper.
