@@ -25,31 +25,28 @@ ${chalk.cyan('  \\____\\___/ \\__,_|\\___|\\__,_|')}
 ${chalk.gray('  AI Coding Assistant by Alia')}
 `;
 
+/**
+ * The commands that talk to Alia as the person (chat, run, exec, resume) need an Oxy session; they
+ * declare it with this hook. Nothing else asks for one: `connect` is authorised by its pairing code
+ * and then by its agent's own credential (Gemies ADR 0038), and `sessions` only reads this machine.
+ *
+ * "Signed in" is a question only the cold boot can answer: the device secret on disk may still
+ * re-mint, or may have been revoked server-side. Reading a stored key out of the config file would
+ * answer a different question — whether a string is present — which is how a revoked credential
+ * used to reach the first request and fail there instead.
+ */
+async function requireOxySession(): Promise<void> {
+  if (await restoreSession()) return;
+  console.log(banner);
+  console.log(chalk.yellow("Not signed in. Let's get you logged in.\n"));
+  if (!(await login())) process.exit(1);
+  console.log();
+}
+
 program
   .name('codea')
   .description('Codea CLI - AI coding assistant for your terminal')
-  .version(VERSION)
-  .hook('preAction', async () => {
-    const command = program.args[0];
-    if (command === 'login' || command === 'logout' || command === 'help') return;
-
-    /**
-     * "Signed in" is now a question only the cold boot can answer: the device
-     * secret on disk may still re-mint, or may have been revoked server-side.
-     * Reading a stored key out of the config file would answer a different
-     * question — whether a string is present — which is how a revoked
-     * credential used to reach the first request and fail there instead.
-     */
-    if (!(await restoreSession())) {
-      console.log(banner);
-      console.log(chalk.yellow("Not signed in. Let's get you logged in.\n"));
-      const success = await login();
-      if (!success) {
-        process.exit(1);
-      }
-      console.log();
-    }
-  });
+  .version(VERSION);
 
 // Default command - start REPL with Ink TUI
 program
@@ -63,6 +60,7 @@ program
   .option('-a, --approval-mode <mode>', 'Approval mode: suggest, auto-edit, full-auto', 'suggest')
   .option('--no-context', 'Disable automatic codebase context')
   .option('--no-instructions', 'Disable CODEA.md project instructions')
+  .hook('preAction', requireOxySession)
   .action(async (options) => {
     await startRepl(options);
   });
@@ -82,6 +80,7 @@ program
   .option('-q, --quiet', 'Suppress UI, output only response text')
   .option('--json', 'Output structured JSON')
   .option('--no-context', 'Disable automatic codebase context')
+  .hook('preAction', requireOxySession)
   .action(async (prompt, options) => {
     await runPrompt(prompt, options);
   });
@@ -97,6 +96,7 @@ program
     configuredModel(),
   )
   .option('--no-context', 'Disable automatic codebase context')
+  .hook('preAction', requireOxySession)
   .action(async (prompt, options) => {
     await runPrompt(prompt, { ...options, yes: true, quiet: false, json: true });
   });
@@ -117,13 +117,12 @@ program
     await logout();
   });
 
-// Serve a coding-agent CLI to Alia as one of the person's agents (ADR 0030)
+// Serve a coding-agent CLI to Gemies as one of the person's gemies (Gemies ADR 0030, ADR 0038).
+// No sign-in: the pairing code is the authorisation.
 program
-  .command('connect')
-  .description('Connect Claude Code, Codex or OpenCode to Alia as one of your agents')
-  .option(
-    '--code <code>',
-    'Single-use pairing code from Alia (Settings → Connect an external agent)',
+  .command('connect [code]')
+  .description(
+    'Connect Claude Code, Codex or OpenCode to Gemies as one of your gemies. With a code from Gemies (Settings → Connect external Gemie) it pairs this machine; without one it serves the agents already paired here.',
   )
   .option('--cli <cli>', 'Which CLI this machine serves: claude, codex or opencode')
   .option('--agent <id>', 'Serve only this paired agent')
@@ -133,8 +132,8 @@ program
     'Do not let the agent change anything (default: it may edit files in the working directory)',
   )
   .option('--write', 'Deprecated: editing is the default')
-  .action(async (options) => {
-    await connect(options);
+  .action(async (code: string | undefined, options) => {
+    await connect(code, options);
   });
 
 // Session management
@@ -149,6 +148,7 @@ program
 program
   .command('resume [sessionId]')
   .description('Resume a previous chat session')
+  .hook('preAction', requireOxySession)
   .action(async (sessionId) => {
     console.log(banner);
     await resumeSession(sessionId);

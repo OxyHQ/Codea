@@ -1,19 +1,23 @@
 /**
- * `codea connect` — serve a coding-agent CLI to Alia as one of the person's agents (ADR 0030).
+ * `codea connect` — serve a coding-agent CLI to Gemies as one of the person's gemies (Gemies ADR 0030,
+ * ADR 0038).
  *
- *   codea connect --code AB12-CD34-EF56 --cli codex     pair this machine, then serve it
- *   codea connect                                       serve the agents this machine is paired with
+ *   codea connect AB12-CD34-EF56-GH78 --cli codex     pair this machine, then serve it
+ *   codea connect                                     serve the agents this machine is paired with
  *
- * Outbound only: it dials Alia over WebSocket with the person's own Oxy session and drives the
- * installed CLI under the person's own login. Nothing is listening on this machine, and no token of
- * the CLI's vendor ever reaches Alia.
+ * No sign-in of any kind. The pairing code, minted in Gemies by the signed-in person, is the whole
+ * authorisation: redeeming it returns a credential for that one agent, kept on this machine (0600),
+ * and the daemon connects with it for as long as the agent exists, across restarts.
+ *
+ * Outbound only: it dials Gemies over WebSocket and drives the installed CLI under the person's own
+ * login to it. Nothing is listening on this machine, and no token of the CLI's vendor reaches Gemies.
  */
 import { hostname } from 'node:os';
 import chalk from 'chalk';
 import { config, DEFAULT_API_BASE_URL } from '../utils/config.js';
-import { linkedAliaClient } from '../utils/oxy-session.js';
 import { startDaemon, type Daemon } from '../external/daemon.js';
 import { runProcess } from '../external/process.js';
+import { NEW_CODE_HINT, redeemCode, type ConnectableAgent } from '../external/redeem.js';
 import { runtimeFor } from '../external/registry.js';
 import {
   forgetAgent,
@@ -25,7 +29,6 @@ import {
 import { EXTERNAL_CLIS, isExternalCli, type ExternalCli } from '../external/types.js';
 
 export interface ConnectOptions {
-  code?: string;
   cli?: string;
   agent?: string;
   cwd?: string;
@@ -71,71 +74,59 @@ async function chooseCli(requested: string | undefined): Promise<ExternalCli | n
   return null;
 }
 
-async function redeem(
-  apiBaseUrl: string,
-  code: string,
-  cli: ExternalCli,
-): Promise<PairedAgent | null> {
-  const linked = linkedAliaClient();
-  try {
-    const response = await linked.fetch(`${apiBaseUrl}/agents/external/redeem`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ code, cli, hostName: hostname().slice(0, 80) || 'this computer' }),
-    });
-    if (response.status === 400) {
-      console.error(
-        chalk.red('That code is invalid, expired or already used. Create a new one in Alia.'),
-      );
-      return null;
-    }
-    if (!response.ok) {
-      console.error(chalk.red(`Alia could not pair this machine (HTTP ${response.status}).`));
-      return null;
-    }
-    const body = (await response.json()) as { agentId: string; name: string };
-    const agent: PairedAgent = { agentId: body.agentId, name: body.name, cli, apiBaseUrl };
-    rememberAgent(agent);
-    return agent;
-  } finally {
-    linked.dispose();
-  }
-}
+const connectable = (agent: PairedAgent): agent is ConnectableAgent =>
+  typeof agent.credential === 'string' && agent.credential !== '';
 
-export async function connect(options: ConnectOptions): Promise<void> {
+export async function connect(code: string | undefined, options: ConnectOptions): Promise<void> {
   const apiBaseUrl = config.get('apiBaseUrl') || DEFAULT_API_BASE_URL;
   let agents = pairedAgents(apiBaseUrl);
 
-  if (options.code !== undefined) {
+  if (code !== undefined) {
     const cli = await chooseCli(options.cli);
     if (cli === null) process.exit(1);
-    const agent = await redeem(apiBaseUrl, options.code, cli);
-    if (agent === null) process.exit(1);
-    console.log(chalk.green(`Paired: ${agent.name}`));
-    agents = [agent];
+    const redeemed = await redeemCode({
+      apiBaseUrl,
+      code,
+      cli,
+      hostName: hostname().slice(0, 80) || 'this computer',
+    });
+    if (typeof redeemed === 'string') {
+      console.error(chalk.red(redeemed));
+      process.exit(1);
+    }
+    rememberAgent(redeemed);
+    console.log(chalk.green(`Paired: ${redeemed.name}`));
+    agents = [redeemed];
   } else if (options.agent !== undefined) {
     agents = agents.filter((a) => a.agentId === options.agent);
   }
 
-  if (agents.length === 0) {
+  // Paired by Codea 3.x, with the person's Oxy session: Gemies issues it a credential once it is
+  // reconnected with a code made for it.
+  for (const agent of agents.filter((a) => !connectable(a))) {
     console.error(
-      chalk.red(
-        'This machine is not paired with any agent. Create a code in Alia (Settings → Connect an external agent) and run `codea connect --code <code>`.',
+      chalk.yellow(
+        `${agent.name} needs reconnecting once: in Gemies, Settings → Connect external Gemie → Reconnect, then paste the text it gives you into your agent.`,
       ),
     );
+  }
+  const serving = agents.filter(connectable);
+  if (serving.length === 0) {
+    if (agents.length === 0) {
+      console.error(chalk.red(`This machine is not paired with any agent. ${NEW_CODE_HINT}`));
+    }
     process.exit(1);
   }
 
   const cwd = options.cwd ?? process.cwd();
   const write = options.readOnly !== true;
   const wsUrl = `${apiBaseUrl.replace(/^http/, 'ws')}/ws/external-agent`;
-  const linked = linkedAliaClient();
   const daemons: Daemon[] = [];
 
   console.log(
     chalk.gray(`Working directory: ${cwd}${write ? `\n${WRITE_NOTICE}` : ' (read-only)'}`),
   );
-  for (const agent of agents) {
+  for (const agent of serving) {
     let announced = false;
     const daemon = startDaemon({
       wsUrl,
@@ -145,7 +136,7 @@ export async function connect(options: ConnectOptions): Promise<void> {
       sessions: sessionStore(),
       cwd,
       write,
-      getToken: () => linked.getAccessToken(wsUrl),
+      credential: agent.credential,
       log: (message) => {
         if (message === 'connected') {
           if (!announced) console.log(chalk.green(`Connected: ${agent.name}`));
@@ -158,8 +149,13 @@ export async function connect(options: ConnectOptions): Promise<void> {
     daemons.push(daemon);
     void daemon.done.then((exit) => {
       if (exit.reason === 'revoked' || exit.reason === 'unknown-agent') {
-        forgetAgent(agent.agentId);
-        console.log(chalk.yellow(`${agent.name} was removed in Alia; this machine forgot it.`));
+        forgetAgent(agent.agentId, agent.credential);
+        console.log(chalk.yellow(`${agent.name} was removed in Gemies; this machine forgot it.`));
+      } else if (exit.reason === 'credential-rejected') {
+        forgetAgent(agent.agentId, agent.credential);
+        console.log(
+          chalk.yellow(`${agent.name} was reconnected with a newer code; this connection stopped.`),
+        );
       }
     });
   }
@@ -171,5 +167,4 @@ export async function connect(options: ConnectOptions): Promise<void> {
   process.once('SIGTERM', stopAll);
 
   await Promise.all(daemons.map((daemon) => daemon.done));
-  linked.dispose();
 }

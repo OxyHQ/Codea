@@ -51,7 +51,7 @@ function start(runtime: ExternalRuntime, extra: Partial<Parameters<typeof startD
     runtime,
     cwd: '/tmp',
     write: false,
-    getToken: async () => 'tok',
+    credential: 'gxa_agent-1',
     minBackoffMs: 20,
     maxBackoffMs: 40,
     ...extra,
@@ -69,10 +69,21 @@ const echo: ExternalRuntime = {
 };
 
 describe('daemon', () => {
-  it('authenticates with the token and agent id', async () => {
+  it('authenticates with the agent’s own credential, and nothing of an Oxy session', async () => {
     start(echo);
     await until(() => received.some((f) => f.type === 'auth'));
-    expect(received[0]).toEqual({ type: 'auth', token: 'tok', agentId: 'agent-1' });
+    expect(received[0]).toEqual({ type: 'auth', agentId: 'agent-1', credential: 'gxa_agent-1' });
+  });
+
+  it('presents the same credential again after a restart of the connection', async () => {
+    start(echo);
+    await until(() => peers.length === 1 && received.length === 1);
+    peers[0].terminate();
+    await until(() => received.filter((f) => f.type === 'auth').length === 2);
+    expect(received.filter((f) => f.type === 'auth')).toEqual([
+      { type: 'auth', agentId: 'agent-1', credential: 'gxa_agent-1' },
+      { type: 'auth', agentId: 'agent-1', credential: 'gxa_agent-1' },
+    ]);
   });
 
   it('answers a turn: deltas then end with the full text and a framed prompt', async () => {
@@ -160,7 +171,23 @@ describe('daemon', () => {
     await expect(d.done).resolves.toEqual({ reason: 'revoked' });
   });
 
-  it('exits when Alia says the agent is unknown', async () => {
+  it('exits without retrying when its credential was replaced by a newer one', async () => {
+    wss.removeAllListeners('connection');
+    let attempts = 0;
+    wss.on('connection', (ws) => {
+      ws.on('message', () => {
+        attempts += 1;
+        ws.send(JSON.stringify({ type: 'auth-error', reason: 'invalid_credential' }));
+        ws.close();
+      });
+    });
+    const d = start(echo);
+    await expect(d.done).resolves.toEqual({ reason: 'credential-rejected' });
+    await new Promise((r) => setTimeout(r, 80));
+    expect(attempts).toBe(1);
+  });
+
+  it('exits when Gemies says the agent is unknown', async () => {
     wss.removeAllListeners('connection');
     wss.on('connection', (ws) => {
       ws.on('message', () =>
@@ -175,7 +202,7 @@ describe('daemon', () => {
     wss.removeAllListeners('connection');
     wss.on('connection', (ws) => {
       ws.on('message', () => {
-        ws.send(JSON.stringify({ type: 'auth-error', reason: 'invalid_token' }));
+        ws.send(JSON.stringify({ type: 'auth-error', reason: 'server_error' }));
         ws.close();
       });
     });

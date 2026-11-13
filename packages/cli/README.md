@@ -57,14 +57,20 @@ codea r "add unit tests for the User class" -y  # Auto-approve changes
 ### Connect an external agent
 
 ```bash
-codea connect --code AB12-CD34-EF56 --cli codex   # pair this computer, then serve it
-codea connect                                     # serve the agents this computer is paired with
+codea connect AB12-CD34-EF56-GH78 --cli codex   # pair this computer, then serve it
+codea connect                                   # serve the agents this computer is paired with
 ```
 
-Serves Claude Code, Codex or OpenCode to Alia as one of your agents. Create the code in Alia
-(Settings → Connect an external agent). The process dials Alia outbound with your Oxy session and
-runs the CLI you are already signed in to, so the answers use your own subscription. It runs in the
-current directory (`--cwd` to change it) and may edit files there; pass `--read-only` to forbid it.
+Serves Claude Code, Codex or OpenCode to Gemies as one of your gemies. In Gemies, Settings → Connect
+external Gemie gives you one text to paste into your agent; it runs the first command. There is no
+sign-in: the single-use code is the authorisation, and redeeming it leaves this computer the agent's
+own credential (in the CLI's config directory, readable by you only), so `codea connect` reconnects
+after a restart without asking anything. Removing the agent in Gemies revokes it; **Reconnect** there
+replaces it.
+
+The process dials Gemies outbound and runs the CLI you are already signed in to, so the answers use
+your own subscription. It runs in the current directory (`--cwd` to change it) and may edit files
+there; pass `--read-only` to forbid it.
 
 ### Session Management
 ```bash

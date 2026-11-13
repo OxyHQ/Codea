@@ -9,8 +9,11 @@ export interface DaemonOptions {
   readonly runtime: ExternalRuntime;
   readonly cwd: string;
   readonly write: boolean;
-  /** A fresh Oxy bearer for each handshake. */
-  readonly getToken: () => Promise<string>;
+  /**
+   * The agent's own credential, which redeeming its pairing code returned. It opens this agent's
+   * connection and nothing else, and lasts as long as the agent: no sign-in, no refresh.
+   */
+  readonly credential: string;
   readonly log?: (message: string) => void;
   /** Reconnect backoff bounds; tests shrink them. */
   readonly minBackoffMs?: number;
@@ -25,6 +28,8 @@ type DaemonExit =
   | { reason: 'stopped' }
   | { reason: 'revoked' }
   | { reason: 'unknown-agent' }
+  /** The agent was reconnected with a newer credential (here or on another machine). */
+  | { reason: 'credential-rejected' }
   | { reason: 'auth-failed' };
 
 export interface Daemon {
@@ -34,7 +39,7 @@ export interface Daemon {
 }
 
 /**
- * Holds the WebSocket to Alia open and answers the turns it receives, one at a time, by driving the
+ * Holds the WebSocket to Gemies open and answers the turns it receives, one at a time, by driving the
  * person's CLI. Outbound only: nothing listens on this machine.
  */
 export function startDaemon(options: DaemonOptions): Daemon {
@@ -133,24 +138,14 @@ export function startDaemon(options: DaemonOptions): Daemon {
     }
   };
 
-  const connect = async (): Promise<void> => {
+  const connect = (): void => {
     if (stopped) return;
-    let token: string;
-    try {
-      token = await options.getToken();
-    } catch (err: unknown) {
-      log(`could not get an Oxy token: ${err instanceof Error ? err.message : String(err)}`);
-      scheduleReconnect(true);
-      return;
-    }
-    if (stopped) return;
-
     const ws = new WebSocket(options.wsUrl);
     socket = ws;
     let authenticated = false;
 
     ws.onopen = () => {
-      send(ws, { type: 'auth', token, agentId: options.agentId });
+      send(ws, { type: 'auth', agentId: options.agentId, credential: options.credential });
     };
     ws.onmessage = (event) => {
       let frame: ServerFrame;
@@ -167,8 +162,10 @@ export function startDaemon(options: DaemonOptions): Daemon {
           log('connected');
           break;
         case 'auth-error':
-          log(`Alia refused the connection: ${frame.reason}`);
+          log(`Gemies refused the connection: ${frame.reason}`);
+          // Neither heals by retrying: the agent is gone, or another credential replaced this one.
           if (frame.reason === 'unknown_agent') exit({ reason: 'unknown-agent' });
+          if (frame.reason === 'invalid_credential') exit({ reason: 'credential-rejected' });
           break;
         case 'turn':
           if (!authenticated) return;
@@ -179,7 +176,7 @@ export function startDaemon(options: DaemonOptions): Daemon {
           turns.get(frame.turnId)?.abort();
           break;
         case 'revoked':
-          log('this agent was removed in Alia');
+          log('this agent was removed in Gemies');
           exit({ reason: 'revoked' });
           break;
       }
@@ -199,7 +196,7 @@ export function startDaemon(options: DaemonOptions): Daemon {
     if (failedHandshake) {
       authFailures += 1;
       if (authFailures >= maxAuthFailures) {
-        log('giving up: Alia keeps refusing this connection');
+        log('giving up: Gemies keeps refusing this connection');
         exit({ reason: 'auth-failed' });
         return;
       }
@@ -207,10 +204,10 @@ export function startDaemon(options: DaemonOptions): Daemon {
     const delay = Math.round(backoff * (0.75 + Math.random() * 0.5));
     backoff = Math.min(backoff * 2, maxBackoff);
     log(`reconnecting in ${Math.round(delay / 1000)}s`);
-    reconnectTimer = setTimeout(() => void connect(), delay);
+    reconnectTimer = setTimeout(connect, delay);
   }
 
-  void connect();
+  connect();
 
   return { done, stop: () => exit({ reason: 'stopped' }) };
 }

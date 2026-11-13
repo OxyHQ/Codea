@@ -1,6 +1,6 @@
 /**
- * The daemon's side of the external-agent protocol (ADR 0030). Mirrors
- * OxyHQ/Alia's `packages/api/src/domain/external-agent.ts`; the two are kept boring on purpose.
+ * The daemon's side of the external-agent protocol (Gemies ADR 0030, ADR 0038). Mirrors
+ * OxyHQ/Gemies' `packages/api/src/domain/external-agent.ts`; the two are kept boring on purpose.
  */
 
 export const EXTERNAL_CLIS = ['claude', 'codex', 'opencode'] as const;
@@ -23,14 +23,15 @@ export type ServerFrame =
       turnId: string;
       task: string;
       history: readonly ChatTurn[];
-      /** The Alia conversation this turn belongs to, when it belongs to one. */
+      /** The Gemies conversation this turn belongs to, when it belongs to one. */
       threadKey?: string;
     }
   | { type: 'cancel'; turnId: string }
   | { type: 'revoked' };
 
 export type DaemonFrame =
-  | { type: 'auth'; token: string; agentId: string }
+  /** The agent's own credential (Gemies ADR 0038); never an Oxy session. */
+  | { type: 'auth'; agentId: string; credential: string }
   | { type: 'delta'; turnId: string; text: string }
   | { type: 'end'; turnId: string; text?: string }
   | { type: 'error'; turnId: string; message: string };
