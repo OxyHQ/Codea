@@ -179,7 +179,7 @@ export class CodeaChatViewProvider implements vscode.WebviewViewProvider {
    */
   private async fetchAndSendModels(): Promise<void> {
     const config = vscode.workspace.getConfiguration('codea');
-    const baseUrl = config.get<string>('apiBaseUrl') || 'https://api.alia.onl';
+    const baseUrl = config.get<string>('apiBaseUrl') || 'https://api.gemies.ai';
     const epoch = this._sessionEpoch;
     await this._authProvider.getAccessToken().catch(() => null);
     if (epoch !== this._sessionEpoch) return;
@@ -763,7 +763,7 @@ export class CodeaChatViewProvider implements vscode.WebviewViewProvider {
       const config = vscode.workspace.getConfiguration('codea');
       const accessToken = await this._authProvider.getAccessToken();
       if (epoch !== this._sessionEpoch || controller.signal.aborted) return;
-      const baseUrl = config.get<string>('apiBaseUrl') || 'https://api.alia.onl';
+      const baseUrl = config.get<string>('apiBaseUrl') || 'https://api.gemies.ai';
       /**
        * Resolved once here, then carried through the whole conversation —
        * including `_lastRequestParams`, which replays it after a tool round. The

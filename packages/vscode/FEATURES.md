@@ -121,7 +121,7 @@ webview-ui/                     # React app for custom UI
 ### API Integration
 
 All extension surfaces use the Alia API:
-- **Endpoint**: `https://api.alia.onl/v1/chat/completions`
+- **Endpoint**: `https://api.gemies.ai/v1/chat/completions`
 - **Authentication**: Bearer token (Oxy session)
 - **Streaming**: Supported for chat responses
 - **Models**: Multiple model options

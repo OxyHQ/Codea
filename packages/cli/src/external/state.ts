@@ -1,4 +1,5 @@
 import Conf from 'conf';
+import { DEFAULT_API_BASE_URL, RETIRED_API_BASE_URL } from '../utils/config.js';
 import type { ExternalCli } from './types.js';
 
 export interface PairedAgent {
@@ -29,6 +30,20 @@ const store = new Conf<Schema>({
   configName: 'external-agents',
   defaults: { agents: [], sessions: {} },
 });
+
+// Agents paired against the backend's previous host are the same agents on the
+// same backend: they move with `apiBaseUrl` instead of asking to pair again.
+const agents = store.get('agents');
+if (agents.some((agent) => agent.apiBaseUrl === RETIRED_API_BASE_URL)) {
+  store.set(
+    'agents',
+    agents.map((agent) =>
+      agent.apiBaseUrl === RETIRED_API_BASE_URL
+        ? { ...agent, apiBaseUrl: DEFAULT_API_BASE_URL }
+        : agent,
+    ),
+  );
+}
 
 export function pairedAgents(apiBaseUrl: string): PairedAgent[] {
   return store.get('agents').filter((agent) => agent.apiBaseUrl === apiBaseUrl);

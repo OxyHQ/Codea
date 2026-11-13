@@ -51,7 +51,7 @@ import {
 } from '@oxy.so/core/session';
 
 import { toEpochMs } from './approval-surface.js';
-import { config } from './config.js';
+import { config, DEFAULT_API_BASE_URL } from './config.js';
 
 /**
  * Where Oxy secrets live on this machine.
@@ -265,7 +265,7 @@ export async function restoreSession(): Promise<boolean> {
 
 /** A disposable product transport backed by this process's live Oxy session. */
 export function linkedAliaClient() {
-  return oxy().createLinkedClient({ baseURL: config.get('apiBaseUrl') || 'https://api.alia.onl' });
+  return oxy().createLinkedClient({ baseURL: config.get('apiBaseUrl') || DEFAULT_API_BASE_URL });
 }
 
 /**

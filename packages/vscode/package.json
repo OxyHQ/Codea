@@ -149,7 +149,7 @@
       "properties": {
         "codea.apiBaseUrl": {
           "type": "string",
-          "default": "https://api.alia.onl",
+          "default": "https://api.gemies.ai",
           "description": "Alia API base URL",
           "order": 2
         },

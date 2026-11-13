@@ -131,7 +131,7 @@ export class McpLocalClient implements vscode.Disposable {
 
   private getBaseUrl(): string {
     const config = vscode.workspace.getConfiguration('codea');
-    return config.get<string>('apiBaseUrl') || 'https://api.alia.onl';
+    return config.get<string>('apiBaseUrl') || 'https://api.gemies.ai';
   }
 
   private async fetchLocalServers(): Promise<McpServerConfig[]> {

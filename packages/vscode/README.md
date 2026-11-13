@@ -54,7 +54,7 @@ Press `Ctrl+Shift+A` (or `Cmd+Shift+A` on Mac) to open Codea Chat and start codi
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `codea.apiBaseUrl` | API base URL | `https://api.alia.onl` |
+| `codea.apiBaseUrl` | API base URL | `https://api.gemies.ai` |
 | `codea.model` | Model id (`publisher/model`) from the Alia catalogue; empty uses the server's default model | `""` (server default) |
 | `codea.maxTokens` | Maximum tokens in response | `4096` |
 | `codea.temperature` | Temperature for response generation (0-2) | `0.7` |

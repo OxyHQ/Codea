@@ -76,7 +76,7 @@ const auth = {
   createLinkedClient: () => ({
     fetch: (...args: Parameters<typeof fetch>) => fetch(...args),
     getAccessToken: async (target: string) => {
-      expect(target).toBe('wss://api.alia.onl/ws/mcp');
+      expect(target).toBe('wss://api.gemies.ai/ws/mcp');
       return world.token;
     },
     dispose() {},

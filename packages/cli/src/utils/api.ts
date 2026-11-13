@@ -1,6 +1,6 @@
 import { AliaServerClient, createAliaTurnControl } from '@alia.onl/server';
 import type { ConversationControl } from './turn-control.js';
-import { config } from './config.js';
+import { config, DEFAULT_API_BASE_URL } from './config.js';
 import type { Message, ToolCall } from './conversation.js';
 import { resolveModelId } from './catalogue.js';
 import { linkedAliaClient, restoreSession, onSessionContextChange } from './oxy-session.js';
@@ -174,7 +174,7 @@ export async function streamChat(
   if (signal?.aborted || control?.stopped) return;
   const linked = linkedAliaClient();
 
-  const baseUrl = config.get('apiBaseUrl') || 'https://api.alia.onl';
+  const baseUrl = config.get('apiBaseUrl') || DEFAULT_API_BASE_URL;
   const controller = new AbortController();
   const accountLifetime = new AbortController();
   const lifetimeSignal = control

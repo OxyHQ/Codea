@@ -21,7 +21,7 @@ export class AliaInlineCompletionProvider implements vscode.InlineCompletionItem
 
   private loadConfig() {
     const config = vscode.workspace.getConfiguration('codea');
-    this.apiBaseUrl = config.get('apiBaseUrl', 'https://api.alia.onl');
+    this.apiBaseUrl = config.get('apiBaseUrl', 'https://api.gemies.ai');
     // Empty means the server's default model.
     this.model = config.get<string>('model', '');
   }
