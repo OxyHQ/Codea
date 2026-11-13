@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import type OpenAI from 'openai';
-import { AliaServerClient, createAliaTurnControl } from '@alia.onl/server';
+import { GemieServerClient, createGemieTurnControl } from '@gemies/server';
 import type { AliaAuthenticationProvider } from './authProvider';
 import { log } from './logger';
 import { resolveModelId } from './catalogue';
@@ -191,8 +191,8 @@ export class AliaChatParticipant {
     const lifetime = new AbortController();
     if (token.isCancellationRequested) controller.abort();
     const linked = this.authProvider.createLinkedClient(this.apiBaseUrl);
-    const control = createAliaTurnControl(
-      new AliaServerClient({ baseUrl: this.apiBaseUrl, fetch: linked.fetch }),
+    const control = createGemieTurnControl(
+      new GemieServerClient({ baseUrl: this.apiBaseUrl, fetch: linked.fetch }),
       { controller, lifetimeSignal: lifetime.signal },
     );
     const cancellation = token.onCancellationRequested(() => {

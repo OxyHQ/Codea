@@ -1,13 +1,13 @@
 /** CLI presentation and tool assembly over the published Alia wire reader. */
 import {
-  AliaServerClient,
-  AliaRequestError,
-  AliaStreamError,
-  type AliaChatCompletionRequest,
-  type AliaToolCallDelta,
-} from '@alia.onl/server';
+  GemieServerClient,
+  GemieRequestError,
+  GemieStreamError,
+  type GemieChatCompletionRequest,
+  type GemieToolCallDelta,
+} from '@gemies/server';
 
-export type ToolCallDelta = AliaToolCallDelta;
+export type ToolCallDelta = GemieToolCallDelta;
 export interface StreamedToolCall {
   id: string;
   type: 'function';
@@ -120,11 +120,11 @@ export function completedToolCalls(
 
 export interface AliaChatStreamOptions {
   readonly baseUrl: string;
-  readonly body: AliaChatCompletionRequest;
+  readonly body: GemieChatCompletionRequest;
   readonly signal?: AbortSignal;
   readonly fetch: typeof fetch;
-  /** Share one instance with createAliaTurnControl; credentials still belong to linked.fetch. */
-  readonly client?: AliaServerClient;
+  /** Share one instance with createGemieTurnControl; credentials still belong to linked.fetch. */
+  readonly client?: GemieServerClient;
 }
 
 function object(value: unknown): Record<string, unknown> | undefined {
@@ -138,7 +138,7 @@ export async function* streamAliaChat(
 ): AsyncGenerator<AliaStreamEvent> {
   const client =
     options.client ??
-    new AliaServerClient({
+    new GemieServerClient({
       baseUrl: options.baseUrl,
       path: '/alia/chat',
       fetch: options.fetch,
@@ -186,13 +186,13 @@ export async function* streamAliaChat(
       }
     }
   } catch (error) {
-    if (error instanceof AliaStreamError && error.failure === 'truncated') {
+    if (error instanceof GemieStreamError && error.failure === 'truncated') {
       throw new AliaChatError('Alia’s response ended before it was complete.', {
         code: 'STREAM_INCOMPLETE',
         retryable: true,
       });
     }
-    if (error instanceof AliaRequestError) {
+    if (error instanceof GemieRequestError) {
       throw new AliaChatError(error.message, {
         status: error.status,
         code: error.code,

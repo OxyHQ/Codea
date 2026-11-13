@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import type OpenAI from 'openai';
-import { AliaServerClient, createAliaTurnControl, type AliaTurnControl } from '@alia.onl/server';
+import { GemieServerClient, createGemieTurnControl, type GemieTurnControl } from '@gemies/server';
 import { fileTools, ToolExecutor, type EditorContext } from './tools';
 import type { AliaAuthenticationProvider } from './authProvider';
 import { errorMessage, errorName } from './errors';
@@ -93,7 +93,7 @@ export class CodeaChatViewProvider implements vscode.WebviewViewProvider {
   private _currentConversationId: string | null = null;
   private _abortController?: AbortController;
   private _lifetimeController?: AbortController;
-  private _control?: AliaTurnControl;
+  private _control?: GemieTurnControl;
   private _stopping?: { controller: AbortController; promise: Promise<void> };
   /** The turn that owns the provider: a stopped turn finishing late must not touch the next one. */
   private _turnSeq = 0;
@@ -949,8 +949,8 @@ You are running inside Visual Studio Code, Microsoft's popular code editor.
     });
 
     const streamOnce = async (finalRound: boolean): Promise<StreamOutcome> => {
-      const control = createAliaTurnControl(
-        new AliaServerClient({ baseUrl, fetch: linked.fetch }),
+      const control = createGemieTurnControl(
+        new GemieServerClient({ baseUrl, fetch: linked.fetch }),
         { controller, lifetimeSignal: lifetime.signal },
       );
       this._control = control;

@@ -16,7 +16,7 @@
         "codea": "./dist/index.js",
       },
       "dependencies": {
-        "@alia.onl/server": "1.3.1",
+        "@gemies/server": "1.0.0",
         "@oxy.so/core": "7.48.0",
         "chalk": "^5.6.2",
         "commander": "^15.0.0",
@@ -43,7 +43,7 @@
       "name": "alia-codea",
       "version": "1.0.10",
       "dependencies": {
-        "@alia.onl/server": "1.3.1",
+        "@gemies/server": "1.0.0",
         "@oxy.so/core": "7.48.0",
         "openai": "^6.46.0",
         "pathe": "2.0.3",
@@ -95,8 +95,6 @@
     "@alcalzone/ansi-tokenize": ["@alcalzone/ansi-tokenize@0.3.1", "", { "dependencies": { "ansi-styles": "^6.2.1", "is-fullwidth-code-point": "^5.0.0" } }, "sha512-cUD0PT0YX+rImRhfn7BfMRduP/tX/Zqt/N0dHlAyn2RlcJssCb5KsCJkhln61eh9vuJDkH8wKn3L8zJzzWXPFg=="],
 
     "@alia-codea/cli": ["@alia-codea/cli@workspace:packages/cli"],
-
-    "@alia.onl/server": ["@alia.onl/server@1.3.1", "", {}, "sha512-83JhhACnYI4ns5ZP81IdJsvwJeR5d4n2Nqpbcbs3Aw5Ee80lW2lconRgUzx8dt20DiNiUM6yMQUPl/InltJDYQ=="],
 
     "@azure/abort-controller": ["@azure/abort-controller@2.2.0", "", { "dependencies": { "tslib": "^2.6.2" } }, "sha512-fNAjWnA/nZ2jz31kxR/AqRaUT8ewHBw/WuBIosK0moMy1C9e5ValbDfFdIxJzVOOYaYkV/b2F1S4H/aHiqfVQg=="],
 
@@ -427,6 +425,8 @@
     "@floating-ui/react-dom": ["@floating-ui/react-dom@2.1.9", "", { "dependencies": { "@floating-ui/dom": "^1.8.0" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-JDjEFGCpImxDCA7JJKviA0M9+RtmJdj0m/NVU5IMgBK+AmZouAQQ7/+2GLH0GXXY0YMw9oXPB8hKdbPYg5QLYg=="],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.12", "", {}, "sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww=="],
+
+    "@gemies/server": ["@gemies/server@1.0.0", "", {}, "sha512-hJEadZspXVtvuEfZLS2oDmRwiPtU5JiBb1A2yD/romSW496s9eB6qiZCsP3wn9oCK8A8PZdeqQWiNGWDtLn/SA=="],
 
     "@hugeicons/core-free-icons": ["@hugeicons/core-free-icons@4.4.0", "", {}, "sha512-7Mz8bmGoY6tZ6l3C2TXwNMLVSr0I8HPwjjFIERAuJFj3rWwLxdF2ZLkDqdrVuEE1dx5b/VXyIsP4WoSU6Q40KQ=="],
 
