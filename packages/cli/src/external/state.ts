@@ -1,3 +1,4 @@
+import { chmodSync } from 'node:fs';
 import Conf from 'conf';
 import { DEFAULT_API_BASE_URL, RETIRED_API_BASE_URL } from '../utils/config.js';
 import type { ExternalCli } from './types.js';
@@ -6,8 +7,14 @@ export interface PairedAgent {
   readonly agentId: string;
   readonly name: string;
   readonly cli: ExternalCli;
-  /** Where this machine pairs from; a different Alia is a different agent. */
+  /** Where this machine pairs from; a different Gemies is a different agent. */
   readonly apiBaseUrl: string;
+  /**
+   * The agent's own credential (Gemies ADR 0038), returned once by redeeming its code. It opens this
+   * agent's connection and nothing else. Absent on an agent paired by Codea 3.x, which connected with
+   * the person's Oxy session and must be reconnected from Gemies once.
+   */
+  readonly credential?: string;
 }
 
 interface Schema {
@@ -24,11 +31,15 @@ export interface SessionStore {
   delete(key: string): void;
 }
 
-/** Which agents this machine serves. Not a secret: the Oxy session is stored elsewhere. */
+/**
+ * Which agents this machine serves, with their credentials: readable by its owner only (0600), so
+ * nobody else on the machine can connect as one of their agents.
+ */
 const store = new Conf<Schema>({
   projectName: 'alia-codea-cli',
   configName: 'external-agents',
   defaults: { agents: [], sessions: {} },
+  configFileMode: 0o600,
 });
 
 // Agents paired against the backend's previous host are the same agents on the
@@ -52,12 +63,19 @@ export function pairedAgents(apiBaseUrl: string): PairedAgent[] {
 export function rememberAgent(agent: PairedAgent): void {
   const others = store.get('agents').filter((a) => a.agentId !== agent.agentId);
   store.set('agents', [...others, agent]);
+  // Asserted, not assumed: a file written by an older version, or by a write path that ignores the
+  // mode, would otherwise keep a credential world-readable.
+  chmodSync(store.path, 0o600);
 }
 
-export function forgetAgent(agentId: string): void {
+/**
+ * Forgets an agent this machine serves with `credential`. Another daemon on this machine may have
+ * reconnected the same agent meanwhile; that entry holds a newer credential and is kept.
+ */
+export function forgetAgent(agentId: string, credential: string): void {
   store.set(
     'agents',
-    store.get('agents').filter((a) => a.agentId !== agentId),
+    store.get('agents').filter((a) => a.agentId !== agentId || a.credential !== credential),
   );
 }
 

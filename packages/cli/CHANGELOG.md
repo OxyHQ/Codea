@@ -1,5 +1,19 @@
 # @alia-codea/cli
 
+## 4.0.0
+
+`codea connect` signs in to nothing. The pairing code from Gemies is the authorisation
+([Gemies ADR 0038](https://github.com/OxyHQ/Gemies/blob/main/docs/adr/0038-external-agents-connect-with-their-own-credential.md)):
+`codea connect <code> --cli <claude|codex|opencode>` redeems it with no session and keeps the agent's
+own credential, readable by you only (0600), which every later `codea connect` presents, so a restart
+reconnects with no login. No Oxy device flow, no sign-in link to approve. Only `chat`, `run`, `exec`
+and `resume` ask for an Oxy session now.
+
+Breaking: the code is a positional argument (`--code` is gone), and the daemon speaks only the
+agent's credential, which needs the Gemies API of ADR 0038. An agent paired by 3.x has no credential:
+`codea connect` says so, and **Reconnect** on it in Gemies (Settings → Connect external Gemie) gives
+you the text that issues one, keeping the agent and its conversations.
+
 ## 3.4.0
 
 `codea connect` continues the CLI's own session for each Alia conversation (Claude Code
