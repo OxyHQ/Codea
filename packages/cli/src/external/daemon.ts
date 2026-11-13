@@ -14,6 +14,8 @@ export interface DaemonOptions {
    * connection and nothing else, and lasts as long as the agent: no sign-in, no refresh.
    */
   readonly credential: string;
+  /** Where Gemies serves this agent's tools (ADR 0039); every run gets them as `gemies`. */
+  readonly toolsUrl?: string;
   readonly log?: (message: string) => void;
   /** Reconnect backoff bounds; tests shrink them. */
   readonly minBackoffMs?: number;
@@ -101,6 +103,9 @@ export function startDaemon(options: DaemonOptions): Daemon {
           write: options.write,
           signal: controller.signal,
           ...(resumeId ? { resumeId } : {}),
+          ...(options.toolsUrl
+            ? { tools: { url: options.toolsUrl, credential: options.credential } }
+            : {}),
           onSession: (id) => {
             if (sessionKey) options.sessions?.set(sessionKey, id);
           },

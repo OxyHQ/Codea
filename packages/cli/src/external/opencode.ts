@@ -1,3 +1,4 @@
+import { opencodeToolsEnv } from './gemie-tools.js';
 import { runProcess, tail } from './process.js';
 import type { ExternalRuntime } from './types.js';
 
@@ -12,12 +13,13 @@ const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;
 export function opencodeRuntime(command = 'opencode'): ExternalRuntime {
   return {
     resumes: false,
-    async run({ prompt, cwd, signal, onDelta }) {
+    async run({ prompt, cwd, signal, onDelta, tools }) {
       let streamed = false;
       const out = await runProcess({
         command,
         args: ['run', prompt],
         cwd,
+        ...(tools ? { env: opencodeToolsEnv(tools) } : {}),
         signal,
         onStdout: (chunk) => {
           const text = chunk.replace(ANSI, '');

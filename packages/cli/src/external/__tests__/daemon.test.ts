@@ -187,6 +187,27 @@ describe('daemon', () => {
     expect(attempts).toBe(1);
   });
 
+  it('hands every run the gemie’s tools when Gemies serves them', async () => {
+    const seen: RuntimeRun[] = [];
+    start(
+      {
+        resumes: false,
+        async run(input) {
+          seen.push(input);
+          return 'done';
+        },
+      },
+      { toolsUrl: 'https://api.gemies.ai/mcp/agents/agent-1' },
+    );
+    await until(() => peers.length > 0 && received.length > 0);
+    peers[0].send(JSON.stringify({ type: 'turn', turnId: 't1', task: 'x', history: [] }));
+    await until(() => seen.length === 1);
+    expect(seen[0].tools).toEqual({
+      url: 'https://api.gemies.ai/mcp/agents/agent-1',
+      credential: 'gxa_agent-1',
+    });
+  });
+
   it('exits when Gemies says the agent is unknown', async () => {
     wss.removeAllListeners('connection');
     wss.on('connection', (ws) => {
