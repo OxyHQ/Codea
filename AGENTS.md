@@ -30,6 +30,9 @@ bun run package:vscode   # genera el VSIX (no publica)
   `~/Oxy/docs/npm-releases.md`.
 - `@gemies/server` es una dependencia npm con versión fijada, no un workspace: súbela
   cuando la API de Gemies cambie el contrato del stream.
+- Lo first-party nunca pide permisos a las personas: esta app actúa por una persona con
+  `actingFor` sobre lo que declara el registro first-party de oxy (oxy ADR 0066); permisos,
+  scopes y consentimiento son solo para terceros.
 - Biome formatea y lintea (`~/Oxy/docs/lint-and-format.md`). `bun.lock` va en el mismo commit
   que el `package.json` que lo cambia.
 - La documentación propia de cada paquete vive en su carpeta (`README.md`, `FEATURES.md`,
