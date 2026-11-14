@@ -178,6 +178,47 @@ describe('the history of a turn that did not finish', () => {
       .map((m) => m.tool_call_id);
     expect(toolIds).toEqual(['a', 'b']);
   });
+
+  it.each(['newConversation', 'loadConversation'] as const)(
+    'answers a still-running tool call as cancelled when the chat is left (%s)',
+    async (leave) => {
+      const provider = makeProvider();
+      let started!: () => void;
+      const toolRunning = new Promise<void>((resolve) => {
+        started = resolve;
+      });
+      world.toolStarted = started;
+      world.streams.push(() => script(toolCalls('running', 'queued')));
+
+      const first = send('one');
+      await toolRunning;
+      if (leave === 'newConversation') provider.newConversation();
+      else
+        (provider as unknown as { loadConversation(c: unknown): void }).loadConversation({
+          id: 'other',
+          title: 'Other',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          messages: [{ role: 'user', content: 'elsewhere' }],
+        });
+      world.toolRelease?.();
+      await first;
+
+      // The late result is dropped; the saved chat answers both calls, after its assistant.
+      const saved = lastSaved();
+      expect(saved.map((m) => m.role)).toEqual(['user', 'assistant', 'tool', 'tool']);
+      expect(saved.filter((m) => m.role === 'tool')).toEqual([
+        expect.objectContaining({
+          tool_call_id: 'running',
+          content: expect.stringMatching(/^Error: Cancelled/),
+        }),
+        expect.objectContaining({
+          tool_call_id: 'queued',
+          content: expect.stringMatching(/^Error: Cancelled/),
+        }),
+      ]);
+    },
+  );
 });
 
 describe('the server’s stand-in', () => {

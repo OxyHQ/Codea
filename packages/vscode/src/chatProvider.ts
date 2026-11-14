@@ -70,6 +70,9 @@ interface ExtendedShellIntegration {
  */
 const MAX_TOOL_ROUNDS = 10;
 
+/** The result recorded for a tool call that its turn left behind: skipped, or still running. */
+const CANCELLED_TOOL_RESULT = 'Error: Cancelled by the user before this tool returned a result.';
+
 /** What one streamed request produced, after the stream closed. */
 interface StreamOutcome {
   text: string;
@@ -303,6 +306,34 @@ export class CodeaChatViewProvider implements vscode.WebviewViewProvider {
   private saveConversations(conversations: Conversation[]): void {
     const key = this.conversationStorageKey();
     if (key) void this._context.globalState.update(key, conversations);
+  }
+
+  /**
+   * Answers as cancelled every tool call in the history that has no result, right after the
+   * results its assistant message already has. A tool skipped by Stop or still running when its
+   * turn is left never reports back, and a history holding a tool call without its result is
+   * one the server refuses.
+   */
+  private cancelUnansweredToolCalls(): void {
+    const history = this._messages;
+    const answered = new Set(history.flatMap((m) => (m.role === 'tool' ? [m.tool_call_id] : [])));
+    for (let i = history.length - 1; i >= 0; i--) {
+      const message = history[i];
+      if (message.role !== 'assistant' || !message.tool_calls) continue;
+      const unanswered = message.tool_calls.filter((call) => !answered.has(call.id));
+      if (unanswered.length === 0) continue;
+      let end = i + 1;
+      while (history[end]?.role === 'tool') end++;
+      history.splice(
+        end,
+        0,
+        ...unanswered.map((call) => ({
+          role: 'tool' as const,
+          tool_call_id: call.id,
+          content: CANCELLED_TOOL_RESULT,
+        })),
+      );
+    }
   }
 
   private saveCurrentConversation(): void {
@@ -676,6 +707,8 @@ export class CodeaChatViewProvider implements vscode.WebviewViewProvider {
   private loadConversation(conversation: Conversation): void {
     this.detachGeneration();
     this._currentTurn = ++this._turnSeq;
+    // A tool still running belongs to the turn just left: its late result is dropped.
+    this.cancelUnansweredToolCalls();
     this.saveCurrentConversation();
     this._lastRequestParams = null;
     this._currentConversationId = conversation.id;
@@ -694,6 +727,7 @@ export class CodeaChatViewProvider implements vscode.WebviewViewProvider {
   public newConversation() {
     this.detachGeneration();
     this._currentTurn = ++this._turnSeq;
+    this.cancelUnansweredToolCalls();
     this.saveCurrentConversation();
     this._lastRequestParams = null;
     this._currentConversationId = null;
@@ -1017,18 +1051,11 @@ You are running inside Visual Studio Code, Microsoft's popular code editor.
 
         if (outcome.toolCalls.length === 0 || lastRound) break;
 
-        for (const [index, toolCall] of outcome.toolCalls.entries()) {
+        for (const toolCall of outcome.toolCalls) {
           if (!live()) {
             if (this._currentTurn !== turn) return;
-            // Stopped between tools: the ones not run are answered as cancelled, so the saved
-            // history never holds a request without its result.
-            for (const skipped of outcome.toolCalls.slice(index)) {
-              this._messages.push({
-                role: 'tool',
-                tool_call_id: skipped.id,
-                content: 'Error: Cancelled by the user before this tool ran.',
-              });
-            }
+            // Stopped between tools: the ones not run are answered as cancelled.
+            this.cancelUnansweredToolCalls();
             break;
           }
           await this.runToolCall(toolCall, () => this._currentTurn === turn);

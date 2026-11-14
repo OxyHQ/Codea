@@ -213,6 +213,8 @@ export async function streamChat(
   try {
     if (control && !control.attach(turn, controller)) return;
     const resolvedModel = await resolveModelId(model, streamSignal);
+    // A Stop still in flight decides whether this generation is dispatched at all.
+    await control?.stopSettled();
     if (streamSignal.aborted || control?.stopped) return;
     const stream = streamAliaChat({
       client,
