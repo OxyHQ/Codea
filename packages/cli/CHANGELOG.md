@@ -1,5 +1,15 @@
 # @alia-codea/cli
 
+## 4.3.0
+
+An external agent writes to the person's other gemies, as any gemie does (Gemies ADR 0042). On a turn
+of the person's chat with the agent, the daemon names that chat to the gemie's tool server: the
+relay's `threadKey` goes in `X-Gemies-Conversation` on every request of that run, read from the
+child's environment (`GEMIES_CONVERSATION`) like the credential, never on a command line — Claude
+Code's `--mcp-config` header, Codex's `env_http_headers`, OpenCode's `{env:…}`. Gemies checks the chat
+is the owner's with this agent and then offers `sendMessage`; the answer comes back to that chat. A
+turn of a room or of a conversation between gemies names none, and has no `sendMessage`.
+
 ## 4.2.0
 
 `codea connect` keeps the agent connected on its own. After pairing it installs the daemon as a

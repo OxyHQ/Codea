@@ -69,4 +69,42 @@ describe('gemie tools for a run', () => {
     });
     expect(env.OPENCODE_CONFIG_CONTENT).not.toContain('gxa_secret');
   });
+
+  describe('on a turn of the person’s chat (Gemies ADR 0042)', () => {
+    const inChat = { ...tools, conversationId: 'chat-1' };
+
+    it('carry the chat in the environment, never on a command line', () => {
+      expect(toolsEnv(inChat, { PATH: '/bin' })).toEqual({
+        PATH: '/bin',
+        GEMIES_AGENT_CREDENTIAL: 'gxa_secret',
+        GEMIES_CONVERSATION: 'chat-1',
+      });
+      for (const args of [claudeToolArgs(inChat), codexToolArgs(inChat)]) {
+        expect(args.join(' ')).not.toContain('chat-1');
+      }
+    });
+
+    it('send it as X-Gemies-Conversation from every CLI', () => {
+      expect(JSON.parse(claudeToolArgs(inChat)[1]!).mcpServers.gemies.headers).toEqual({
+        Authorization: 'Bearer ${GEMIES_AGENT_CREDENTIAL}',
+        'X-Gemies-Conversation': '${GEMIES_CONVERSATION}',
+      });
+      expect(codexToolArgs(inChat).slice(4)).toEqual([
+        '-c',
+        'mcp_servers.gemies.env_http_headers={ "X-Gemies-Conversation" = "GEMIES_CONVERSATION" }',
+      ]);
+      const env = opencodeToolsEnv(inChat, {});
+      expect(JSON.parse(env.OPENCODE_CONFIG_CONTENT).mcp.gemies.headers).toEqual({
+        Authorization: 'Bearer {env:GEMIES_AGENT_CREDENTIAL}',
+        'X-Gemies-Conversation': '{env:GEMIES_CONVERSATION}',
+      });
+      expect(env.GEMIES_CONVERSATION).toBe('chat-1');
+    });
+
+    it('drop a chat a previous run left in the environment when the turn names none', () => {
+      expect(toolsEnv(tools, { GEMIES_CONVERSATION: 'old' })).not.toHaveProperty(
+        'GEMIES_CONVERSATION',
+      );
+    });
+  });
 });
