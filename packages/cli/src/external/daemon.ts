@@ -104,7 +104,15 @@ export function startDaemon(options: DaemonOptions): Daemon {
           signal: controller.signal,
           ...(resumeId ? { resumeId } : {}),
           ...(options.toolsUrl
-            ? { tools: { url: options.toolsUrl, credential: options.credential } }
+            ? {
+                tools: {
+                  url: options.toolsUrl,
+                  credential: options.credential,
+                  // A turn of the person's chat names it, so the agent can write to their gemies
+                  // from there (Gemies ADR 0042); a room or gemie-to-gemie turn names none.
+                  ...(frame.threadKey ? { conversationId: frame.threadKey } : {}),
+                },
+              }
             : {}),
           onSession: (id) => {
             if (sessionKey) options.sessions?.set(sessionKey, id);
